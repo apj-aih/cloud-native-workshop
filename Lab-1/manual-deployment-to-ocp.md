@@ -46,6 +46,13 @@ export OCP_PROJECT="<your-ocp-project-name>"  # e.g., john-dev (copied from sand
 export UI_IMAGE="quay.io/${QUAY_USERNAME}/vote-ui:${IMAGE_TAG}"
 export API_IMAGE="quay.io/${QUAY_USERNAME}/vote-api:${IMAGE_TAG}"
 ```
+Save the file
+```bash
+Esc :wq
+
+Enter
+```
+
 Reload the terminal
 ```bash
 source ~/.bashrc
