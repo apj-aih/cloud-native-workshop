@@ -6,8 +6,8 @@ Manually containerize and deploy a sample application (UI + API) to an OpenShift
 
 **Repos used:**
 
-* UI: [https://github.com/openshift/pipelines-vote-ui](https://github.com/openshift/pipelines-vote-ui)
-* API: [https://github.com/openshift/pipelines-vote-api](https://github.com/openshift/pipelines-vote-api)
+* UI: [https://github.com/apj-aih/pipelines-vote-ui](https://github.com/apj-aih/pipelines-vote-ui)
+* API: [https://github.com/apj-aih/pipelines-vote-api](https://github.com/apj-aih/pipelines-vote-api)
 
 At the end of the lab, you will have:
 
@@ -86,6 +86,10 @@ If any command is missing, ask a facilitator.
 
 Keep this password & use it when CLI password is asked.
 
+Download the Kubernetes secret yaml and keep it as well.
+
+![Screenshot: Quay IO K8s Secret](./images/quay-k8s-secret.png)
+
 <br/>
 
 ## Log In to Required Services
@@ -143,10 +147,10 @@ Now that you are logged in and your environment is ready, clone the two reposito
 mkdir -p ~/labs && cd ~/labs
 
 # Clone the UI repo
-git clone https://github.com/openshift/pipelines-vote-ui.git
+git clone https://github.com/apj-aih/pipelines-vote-ui.git
 
 # Clone the API repo
-git clone https://github.com/openshift/pipelines-vote-api.git
+git clone https://github.com/apj-aih/pipelines-vote-api.git
 
 # Verify
 tree -L 1
@@ -173,6 +177,8 @@ Next, we will build container images for both the UI and API components and tag 
 ```bash
 cd ~/labs/pipelines-vote-ui
 
+git checkout manual
+
 echo "$UI_IMAGE"
 
 podman build -t "$UI_IMAGE" .
@@ -184,12 +190,12 @@ After the build completes, confirm the image exists:
 podman images | grep vote-ui
 ```
 
-**\[Add Screenshot]**: Successful build of UI image
-
 ### 2) Build the API image
 
 ```bash
 cd ~/labs/pipelines-vote-api
+
+git checkout manual
 
 echo "$API_IMAGE"
 
@@ -202,8 +208,6 @@ Check the image:
 podman images | grep vote-api
 ```
 
-**\[Add Screenshot]**: Successful build of API image
-
 ### 3) Verify both images
 
 ```bash
@@ -212,7 +216,8 @@ podman images | grep "$QUAY_USERNAME"
 
 Expected result: two images tagged with your Quay.io namespace.
 
-**\[Add Screenshot]**: List of built images
+![Screenshot: Image Verify](./images/image_verify.png)
+
 
 <br/>
 
@@ -220,29 +225,39 @@ Expected result: two images tagged with your Quay.io namespace.
 
 Now that the images are built locally, push them to your Quay.io registry.
 
-### 1) Push the UI image
+### 1) Create new repositories for both images. Go to quay.io & click "Create New Repository"
+
+![Screenshot: Quay New Registry](./images/quay-new-repo.png)
+
+### 2) Create public repo for vote-ui & vote-api
+
+![Screenshot: Quay New Vote UI Registry](./images/quay-new-repo-vote-ui.png) 
+
+![Screenshot: Quay New Vite API Registry](./images/quay-new-repo-vote-api.png)
+
+### 3) Push the UI image
 
 ```bash
 podman push "$UI_IMAGE"
 ```
 
-**\[Add Screenshot]**: Successful push of UI image to Quay.io
-
-### 2) Push the API image
+### 4) Push the API image
 
 ```bash
 podman push "$API_IMAGE"
 ```
 
-**\[Add Screenshot]**: Successful push of API image to Quay.io
-
-### 3) Verify in Quay.io Web Console
+### 5) Verify in Quay.io Web Console
 
 1. Log in to [https://quay.io](https://quay.io) with your account.
 2. Navigate to your namespace.
-3. Ensure you see both repositories: `vote-ui` and `vote-api`.
+3. Ensure you see both repositories: `vote-ui` and `vote-api` with quota consumed.
 
-**\[Add Screenshot]**: Quay.io console showing the two repositories
+![Screenshot: Push Verify](./images/push_verify.png)
+
+4. You can see the tag uploaded as shown below:
+
+![Screenshot: Quay Vote API Tags](./images/quay-vote-api-v1.png)
 
 <br/>
 
@@ -259,22 +274,23 @@ oc new-app "$API_IMAGE" --name=vote-api
 Expose the service so the UI can reach it:
 
 ```bash
-oc expose svc/vote-api
+oc expose deploy/vote-api --port 9000
 ```
 
 Check status:
 
 ```bash
 oc get pods
+
 oc get svc vote-api
 ```
-
-**\[Add Screenshot]**: vote-api pod running and service exposed
 
 ### 2) Deploy the UI
 
 ```bash
-oc new-app "$UI_IMAGE" --name=vote-ui
+oc new-app "$UI_IMAGE" --name=vote-ui \
+  -e VOTING_API_SERVICE_HOST=vote-api \
+  -e VOTING_API_SERVICE_PORT=9000
 ```
 
 Expose the UI as a public route:
@@ -291,14 +307,30 @@ oc get route vote-ui
 
 Copy the `HOST/PORT` and open it in your browser.
 
-**\[Add Screenshot]**: vote-ui pod running and route URL
+![Screenshot: Voting APP UI](./images/voting-ui.png)
 
 ### 3) Verify End-to-End
 
 1. Open the route URL in your browser.
 2. Ensure the UI loads and communicates with the API.
 
-**\[Add Screenshot]**: Browser showing the running application
+![Screenshot: Vote for Dog UI](./images/voting-ui-dog.png)
+
+<br/>
+
+# Clean Up
+
+Run the below commands to remove all the resources created in the openshift cluster.
+
+```bash
+# Delete the UI app
+oc delete all -l app=vote-ui
+
+# Delete the API app
+oc delete all -l app=vote-api
+```
+
+**Ignore the Warning & Permission issues while deleting**
 
 <br/>
 
