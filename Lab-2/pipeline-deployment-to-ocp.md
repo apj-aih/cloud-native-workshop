@@ -11,7 +11,7 @@ Instead of manually building images and deploying them (as we did in Lab 1), we 
 
 Below is the high-level flow of our pipeline:
 
-![Screenshot: Pipeline for Lab #2](./images/pipeline-diagram.png)
+![Screenshot: Pipeline for Lab #2](./images/pipeline-diagram1.png)
 
 </br>
 
@@ -46,7 +46,7 @@ Key features:
 - Designed for microservices and decentralized teams
 - Integrated with the **OpenShift Developer Console**
 
-![Screenshot: Pipeline Operator](./images/openshift-pipeline-operator.png)
+![Screenshot: Pipeline Operator](./images/openshift-pipeline-operator1.png)
 
 </br>
 
@@ -67,7 +67,7 @@ Tekton building blocks:
 
 We need a secret in OpenShift to allow pipelines to push images to Quay.io.
 
-1. Create a **Quay.io robot account** or use your Quay.io login account credentials.
+1. Use your Quay.io login account credentials to create the secret.
 2. In OpenShift Web Console:
    - Navigate to your project.
    - Go to **Workloads → Secrets → Create Image pull secret**.
@@ -77,10 +77,12 @@ We need a secret in OpenShift to allow pipelines to push images to Quay.io.
    - Registry server address: **quay.io**
    - Username: `<Quay-UserName>`
    - Password: `<Quay-Set-Password>`
+![Screenshot: Quay Secret](./images/quay-io-secret1.png)
+![Screenshot: Quay Secret](./images/quay-io-secret.png)
 
    Alternatively, you can create the secret using the file downloaded earlier in Lab 1:
    ```bash
-   oc create -f `<YOUR-SECRET-NAME>`.yml
+   oc create -f <YOUR-SECRET-NAME>.yml
 
    #Example
    #oc create -f user-secret.yml
@@ -88,12 +90,14 @@ We need a secret in OpenShift to allow pipelines to push images to Quay.io.
 
 3. Link the secret to the pipeline service account, you should run below command in the Terminal:
    ```bash
-   oc secrets link pipeline `<YOUR-SECRET-NAME>` --for=pull,mount
+   oc get secrets
+
+   oc secrets link pipeline <YOUR-SECRET-NAME> --for=pull,mount
 
    #Example:
    #oc secrets link pipeline user-pull-secret --for=pull,mount
    ```
-   ![Screenshot: Quay Secret](./images/quay-io-secret.png)
+   
 
 </br>
 
@@ -101,7 +105,7 @@ We need a secret in OpenShift to allow pipelines to push images to Quay.io.
 
 We will now create the tasks in the **OpenShift Developer Console**. Let's create two tasks (1) apply-manifests and (2) update-deployment:
 
-1. Go to **Pipelines → Tasks → Create Task**.
+1. Go to **Pipelines → Tasks → Create Task**
 ![Screenshot: Create Task](./images/create-task.png)
 
 2. Copy & paste below mentioned apply-manifests YAML & click `Create`:
@@ -323,8 +327,6 @@ Let's run the Pipeline manually to see how it works. We are going the run the pi
 
 2. Copy & paste the below PipelineRun YAML content for vote-api:
 
-    ![Screenshot: create-pipeline run](./images/create-pipeline-run2.png)
-
     ```yaml
     apiVersion: tekton.dev/v1
     kind: PipelineRun
@@ -359,6 +361,8 @@ Let's run the Pipeline manually to see how it works. We are going the run the pi
                   storage: 1Gi
     ```
 3. Change (1) `{YOUR_GITHUB_USERNAME}`, (2) `{YOUR_OCP_PROJECT}`, (3) `{YOUR_QUAY_USERNAME}` in the above YAML content.
+![Screenshot: create-pipeline run](./images/create-pipeline-run2.png)
+
 4. Click `Create` to save the PipelineRun.
 5. You should able to see the Pipeline running progress as shown below:
    ![Screenshot: create-pipeline run](./images/create-pipeline-run3.png)
@@ -369,7 +373,6 @@ Let's run the Pipeline manually to see how it works. We are going the run the pi
 8. Let's run the pipeline for vote-ui repo. Click **Pipelines → Create PipelineRun** to the run the pipeline.
     ![Screenshot: create-pipeline run](./images/create-pipeline-run1.png)
 9. Copy & paste the below PipelineRun YAML content for vote-ui:
-    ![Screenshot: create-pipeline run](./images/create-pipeline-run2.png)
 
     ```yaml
     apiVersion: tekton.dev/v1
@@ -405,6 +408,8 @@ Let's run the Pipeline manually to see how it works. We are going the run the pi
                   storage: 1Gi
     ```
 10. Change (1) `{YOUR_GITHUB_USERNAME}`, (2) `{YOUR_OCP_PROJECT}`, (3) `{YOUR_QUAY_USERNAME}` in the above YAML content.
+    ![Screenshot: create-pipeline run](./images/create-pipeline-run2.png)
+
 11. Click `Create` to save the PipelineRun.
 12. Wait for pipeline to complete all the tasks.
     ![Screenshot: create-pipeline run](./images/create-pipeline-run5.png)
@@ -419,128 +424,154 @@ Let's run the Pipeline manually to see how it works. We are going the run the pi
 
 Now we will automate pipeline using triggers when there is a change and code is commited & pushed.
 
-1. Create a **TriggerTemplate**, **TriggerBinding**, **Trigger**, and **EventListener**.
-2. Apply YAMLs for each via Web Console:
-
-```yaml
-apiVersion: triggers.tekton.dev/v1beta1
-kind: TriggerTemplate
-metadata:
-  name: vote-app
-spec:
-  params:
-  - name: git-repo-url
-    description: The git repository url
-  - name: git-revision
-    description: The git revision
-    default: master
-  - name: git-repo-name
-    description: The name of the deployment to be created / patched
-
-  resourcetemplates:
-  - apiVersion: tekton.dev/v1
-    kind: PipelineRun
+1. As discussed earlier, we need to create **TriggerTemplate**, **TriggerBinding**, **Trigger**, and **EventListener**. Let's create one by one.
+2. Go to **Pipelines → Triggers → Create TriggerTemplate** to the create the trigger template.
+![Screenshot: manual run route](./images/trigger-template-create.png)  
+3. Copy & paste the below TriggerTemplate YAML content:
+    ```yaml
+    apiVersion: triggers.tekton.dev/v1beta1
+    kind: TriggerTemplate
     metadata:
-      generateName: build-deploy-$(tt.params.git-repo-name)-
+      name: vote-app
     spec:
-      taskRunTemplate:
-        serviceAccountName: pipeline
-      pipelineRef:
-        name: build-upload-quayio-and-deploy
       params:
-      - name: deployment-name
-        value: $(tt.params.git-repo-name)
-      - name: git-url
-        value: $(tt.params.git-repo-url)
+      - name: git-repo-url
+        description: The git repository url
       - name: git-revision
-        value: $(tt.params.git-revision)
-      - name: IMAGE
-        value: image-registry.openshift-image-registry.svc:5000/$(context.pipelineRun.namespace)/$(tt.params.git-repo-name)
-      - name: quay-io-account
-        value: balslive
-      - name: quay-io-repository
-        value: vote-ui
-      - name: quay-io-image-tag-name
-        value: latest
-      - name: STORAGE_DRIVER
-        value: vfs
-      workspaces:
-      - name: shared-workspace
-        volumeClaimTemplate:
-          spec:
-            accessModes:
-              - ReadWriteOnce
-            resources:
-              requests:
-                storage: 500Mi
-```
+        description: The git revision
+        default: master
+      - name: git-repo-name
+        description: The name of the deployment to be created / patched
 
-```yaml
-apiVersion: triggers.tekton.dev/v1beta1
-kind: TriggerBinding
-metadata:
-  name: vote-app
-spec:
-  params:
-  - name: git-repo-url
-    value: $(body.repository.clone_url)
-  - name: git-repo-name
-    value: $(body.repository.name)
-  - name: git-revision
-    value: $(body.head_commit.id)
-```
-
-```yaml
-apiVersion: v1
-kind: Secret
-metadata:
-  name: github-secret
-type: Opaque
-stringData:
-  secretToken: "1234567"
-```
-
-```yaml
-apiVersion: triggers.tekton.dev/v1beta1
-kind: EventListener
-metadata:
-  name: vote-app
-spec:
-  serviceAccountName: pipeline
-  triggers:
-    - name: vote-app-trigger
-      serviceAccountName: pipeline
-      interceptors:
-        - ref:
-            name: "github"
+      resourcetemplates:
+      - apiVersion: tekton.dev/v1
+        kind: PipelineRun
+        metadata:
+          generateName: build-deploy-$(tt.params.git-repo-name)-
+        spec:
+          taskRunTemplate:
+            serviceAccountName: pipeline
+          pipelineRef:
+            name: build-upload-quayio-and-deploy
           params:
-            - name: "secretRef"
-              value:
-                secretName: github-secret
-                secretKey: secretToken
-            - name: "eventTypes"
-              value: ["push"]
-      bindings:
-        - ref: vote-app     # TriggerBinding
-      template:
-        ref: vote-app       # TriggerTemplate
-```
+          - name: deployment-name
+            value: $(tt.params.git-repo-name)
+          - name: git-url
+            value: $(tt.params.git-repo-url)
+          - name: git-revision
+            value: $(tt.params.git-revision)
+          - name: IMAGE
+            value: image-registry.openshift-image-registry.svc:5000/$(context.pipelineRun.namespace)/$(tt.params.git-repo-name)
+          - name: quay-io-account
+            value: {YOUR_QUAY_USERNAME}
+          - name: quay-io-repository
+            value: $(tt.params.git-repo-name)
+          - name: quay-io-image-tag-name
+            value: latest
+          - name: STORAGE_DRIVER
+            value: vfs
+          workspaces:
+          - name: shared-workspace
+            volumeClaimTemplate:
+              spec:
+                accessModes:
+                  - ReadWriteOnce
+                resources:
+                  requests:
+                    storage: 500Mi
+    ```
+4. Change `{YOUR_QUAY_USERNAME}` in the above YAML content.
+    ![Screenshot: create-pipeline run](./images/trigger-template-create1.png)
 
-3. After creating the EventListener, expose it as a Route:
-   ```bash
-   oc expose svc el-vote-app
-   
-   echo "$(oc  get route el-vote-app --template='http://{{.spec.host}}')"
-   ```
-   Copy the EventListener route URL.
+5. Click `Create` to save the TriggerTemplate.
 
-4. In your forked GitHub repo:
+6. Go to **Pipelines → Triggers → Create TriggerBinding** to the create the trigger binding.
+![Screenshot: manual run route](./images/trigger-binding-create.png)  
+
+7. Copy & paste the below TriggerBinding YAML content:
+
+    ```yaml
+    apiVersion: triggers.tekton.dev/v1beta1
+    kind: TriggerBinding
+    metadata:
+      name: vote-app
+    spec:
+      params:
+      - name: git-repo-url
+        value: $(body.repository.clone_url)
+      - name: git-repo-name
+        value: $(body.repository.name)
+      - name: git-revision
+        value: $(body.head_commit.id)
+    ```
+
+8. Create a trigger secret by going to **Workloads → Secrets → Create From YAML** 
+![Screenshot: manual run route](./images/trigger-secret.png)  
+
+9. Copy & paste the below Secret YAML content and click create:
+    ```yaml
+    apiVersion: v1
+    kind: Secret
+    metadata:
+      name: github-secret
+    type: Opaque
+    stringData:
+      secretToken: "1234567"
+    ```
+    ![Screenshot: manual run route](./images/trigger-secret1.png) 
+
+10. Let's create Event Listener. Go to **Pipelines → Triggers → Create EventListener**.
+![Screenshot: manual run route](./images/event-listener-create.png)  
+
+11. Copy & paste the below EventListener YAML content:
+
+    ```yaml
+    apiVersion: triggers.tekton.dev/v1beta1
+    kind: EventListener
+    metadata:
+      name: vote-app
+    spec:
+      serviceAccountName: pipeline
+      triggers:
+        - name: vote-app-trigger
+          serviceAccountName: pipeline
+          interceptors:
+            - ref:
+                name: "github"
+              params:
+                - name: "secretRef"
+                  value:
+                    secretName: github-secret
+                    secretKey: secretToken
+                - name: "eventTypes"
+                  value: ["push"]
+          bindings:
+            - ref: vote-app     # TriggerBinding
+          template:
+            ref: vote-app       # TriggerTemplate
+    ```
+
+12. After creating the EventListener, expose it as a Route. Run the below command from the Terminal:
+    ```bash
+    oc expose svc el-vote-app
+    ```
+    View the URL using below command:
+    ```bash
+    echo "$(oc  get route el-vote-app --template='http://{{.spec.host}}')"
+    ```
+    Copy the EventListener route URL shown from the above command.
+
+13. In your forked GitHub repo for both vote-ui and vote-api:
    - Go to **Settings → Webhooks → Add Webhook**.
-   - Paste the EventListener route URL.
+   ![Screenshot: manual run route](./images/webhook-create.png)  
+   - Paste the EventListener route URL as Payload URL.
    - Select `application/json`.
+   - Enter secret as `1234567` (trigger secret we created earlier)
    - Choose **Just the push event**.
+   - Click `Add webhook`
+   ![Screenshot: manual run route](./images/webhook-create1.png)  
 
-**[Add Screenshot]**: Webhook setup in GitHub.
+Repeat the steps for vote-api repository as well.
 
 </br>
 
