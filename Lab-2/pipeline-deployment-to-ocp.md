@@ -561,7 +561,7 @@ Now we will automate pipeline using triggers when there is a change and code is 
     ```
     Copy the EventListener route URL shown from the above command.
 
-13. In your forked GitHub repo for both vote-ui and vote-api:
+13. In your forked GitHub repo for `pipelines-vote-ui`:
    - Go to **Settings → Webhooks → Add Webhook**.
    ![Screenshot: manual run route](./images/webhook-create.png)  
    - Paste the EventListener route URL as Payload URL.
@@ -571,8 +571,6 @@ Now we will automate pipeline using triggers when there is a change and code is 
    - Click `Add webhook`
    ![Screenshot: manual run route](./images/webhook-create1.png)  
 
-Repeat the steps for vote-api repository as well.
-
 </br>
 
 ## Part 7 – Test the Pipeline
@@ -581,8 +579,7 @@ Repeat the steps for vote-api repository as well.
 2. Push the commit to GitHub.
 3. Watch the pipeline automatically start in **OpenShift Pipelines → PipelineRuns**.
 4. Verify that images are built and pushed to Quay.io, and the application is redeployed.
-
-**[Add Screenshot]**: Pipeline running after webhook trigger.
+5. You may configure the webhook for `pipelines-vote-api` repo and test it as well.
 
 </br>
 
