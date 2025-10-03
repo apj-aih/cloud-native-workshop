@@ -87,11 +87,11 @@ If any command is missing, ask a facilitator.
 
 ![Screenshot: Quay IO](./images/quay-io.png)
 
-### 2) In CLI Password - click **Set password**
+### 2) In CLI Password - click **Set password** or **Generate Encrypted Password**
 
 ![Screenshot: Quay IO Set Password](./images/quay-set-password.png)
 
-Keep this password & use it when CLI password is asked.
+**Keep this password & use it when CLI password is asked**
 
 Download the Kubernetes secret yaml and keep it as well.
 
@@ -166,7 +166,7 @@ tree -L 1
 Expected structure:
 
 ```
-./labs
+.
 ├── pipelines-vote-ui
 └── pipelines-vote-api
 ```
@@ -187,7 +187,8 @@ cd ~/labs/pipelines-vote-ui
 git checkout manual
 
 echo "$UI_IMAGE"
-
+```
+```bash
 podman build -t "$UI_IMAGE" .
 ```
 
@@ -205,7 +206,8 @@ cd ~/labs/pipelines-vote-api
 git checkout manual
 
 echo "$API_IMAGE"
-
+```
+```bash
 podman build -t "$API_IMAGE" .
 ```
 
@@ -313,6 +315,8 @@ oc get route vote-ui
 ```
 
 Copy the `HOST/PORT` and open it in your browser.
+
+Example: http://vote-ui-[OCP_PROJECT].apps.[CLUSTER].openshiftapps.com 
 
 ![Screenshot: Voting APP UI](./images/voting-ui.png)
 
