@@ -11,7 +11,7 @@ Manually containerize and deploy a sample application (UI + API) to an OpenShift
 
 At the end of the lab, you will have:
 
-* Two contianer images (UI & API) in **Quay.io** under your organization
+* Two container images (UI & API) in **Quay.io** under your organization
 * A working application deployed to your **OpenShift** project/namespace
 
 <br/>
