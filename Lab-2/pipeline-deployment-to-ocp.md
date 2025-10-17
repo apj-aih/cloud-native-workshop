@@ -7,7 +7,7 @@ Instead of manually building images and deploying them (as we did in Lab 1), we 
 2. Builds container images
 3. Pushes them to **Quay.io** (our container registry)
 4. Verify security scanning details
-4. Deploys them to the OpenShift cluster
+5. Deploys them to the OpenShift cluster
 
 Below is the high-level flow of our pipeline:
 
@@ -145,7 +145,7 @@ We will now create the tasks in the **OpenShift Developer Console**. Let's creat
     spec:
       params:
         - name: deployment
-          description: The name of the deployment patch the image
+          description: The name of the deployment to patch the image
           type: string
         - name: IMAGE
           description: Location of image to be patched with
@@ -319,9 +319,9 @@ We will now create the pipeline in the **OpenShift Developer Console**.
 
 ## Part 6 – Manually run the Pipeline using Pipeline Run
 
-Let's run the Pipeline manually to see how it works. We are going the run the pipeline for both repos we forked earlier (1) vote-api (2) vote-ui.
+Let's run the Pipeline manually to see how it works. We are going to run the pipeline for both repos we forked earlier (1) vote-api (2) vote-ui.
 
-1. Click **Pipelines → Create PipelineRun** to the run the pipeline for vote-api repo.
+1. Click **Pipelines → Create PipelineRun** to run the pipeline for vote-api repo.
 
     ![Screenshot: create-pipeline run](./images/create-pipeline-run1.png)
 
@@ -366,7 +366,7 @@ Let's run the Pipeline manually to see how it works. We are going the run the pi
 4. Click `Create` to save the PipelineRun.
 5. You should able to see the Pipeline running progress as shown below:
    ![Screenshot: create-pipeline run](./images/create-pipeline-run3.png)
-6. Click `fetch-repository` task to view the logs. You can see the logs for all the tasks as shown below. Make sure all tasks showing success before move on to next step.
+6. Click `fetch-repository` task to view the logs. You can see the logs for all the tasks as shown below. Make sure all tasks show success before moving on to the next step.
    ![Screenshot: create-pipeline run](./images/create-pipeline-run4.png)
 7. You can view the deployed vote-api pod in **Workloads  → Pods** with status **Running**
    ![Screenshot: create-pipeline pod](./images/create-pipeline-pods.png)
@@ -411,21 +411,21 @@ Let's run the Pipeline manually to see how it works. We are going the run the pi
     ![Screenshot: create-pipeline run](./images/create-pipeline-run2.png)
 
 11. Click `Create` to save the PipelineRun.
-12. Wait for pipeline to complete all the tasks.
+12. Wait for the pipeline to complete all tasks.
     ![Screenshot: create-pipeline run](./images/create-pipeline-run5.png)
 13. You can view the deployed vote-ui pod in **Workloads  → Pods** with status **Running**
 14. Navigate to **Networking  → Routes** and Click the `Location` for pipelines-vote-ui:
     ![Screenshot: manual run route](./images/manual_run_route.png)
-15. You should see the running application and voting should work.
+15. You should see the running application, and the voting functionality should be working.
     ![Screenshot: manual run route](./images/manual_run_app.png)
 
 
 ## Part 6 – Add GitHub Webhook Integration
 
-Now we will automate pipeline using triggers when there is a change and code is commited & pushed.
+Now we will automate the pipeline using triggers that activate when code is committed and pushed to GitHub.
 
 1. As discussed earlier, we need to create **TriggerTemplate**, **TriggerBinding**, **Trigger**, and **EventListener**. Let's create one by one.
-2. Go to **Pipelines → Triggers → Create TriggerTemplate** to the create the trigger template.
+2. Go to **Pipelines → Triggers → Create TriggerTemplate** to create the trigger template.
 ![Screenshot: manual run route](./images/trigger-template-create.png)  
 3. Copy & paste the below TriggerTemplate YAML content:
     ```yaml
@@ -505,7 +505,7 @@ Now we will automate pipeline using triggers when there is a change and code is 
         value: $(body.head_commit.id)
     ```
 
-8. Create a trigger secret by going to **Workloads → Secrets → Create From YAML** 
+8. Next, create a trigger secret by going to **Workloads → Secrets → Create From YAML** 
 ![Screenshot: manual run route](./images/trigger-secret.png)  
 
 9. Copy & paste the below Secret YAML content and click create:
@@ -590,4 +590,4 @@ You have successfully:
 - Created OpenShift Pipelines (Tekton)  
 - Secured Quay.io credentials  
 - Configured a GitHub webhook for CI/CD  
-- Triggered a pipeline automatically with a commit  
+- Automatically triggered a pipeline with a commit
